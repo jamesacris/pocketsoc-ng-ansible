@@ -1,5 +1,14 @@
 # pocketsoc-ng-ansible
 
+## Usage
+
+Host needs
+
+- ansible
+- git
+
+## Variables
+
 `pocketsoc-ng_var.env` should be of the format
 
 ```
