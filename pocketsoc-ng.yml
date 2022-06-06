@@ -1,0 +1,167 @@
+---
+- name: local updates
+  hosts: 127.0.0.1
+  become: true
+
+  tasks:
+    - name: local yum update
+      ansible.builtin.yum:
+        name: "*"
+        state: latest
+      tags:
+        - localonly
+
+- name: install pocketsoc-ng
+  hosts: trainingvms
+  become: true
+  vars_files:
+    - pocketsoc-ng_vars.env
+
+  tasks:
+    - name: yum update
+      ansible.builtin.yum:
+        name: "*"
+        state: latest
+
+    - name: set sysctl
+      ansible.posix.sysctl:
+        name: vm.max_map_count
+        value: 262144
+        state: present
+        sysctl_set: true
+        reload: true
+
+    - name: Add docker signing key
+      ansible.builtin.rpm_key:
+        key: "https://download.docker.com/linux/centos/gpg"
+        state: present
+
+    - name: Add docker repository into repo.d list
+      ansible.builtin.yum_repository:
+        name: docker
+        description: docker repository
+        baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable"
+        enabled: true
+        gpgcheck: true
+        gpgkey: "https://download.docker.com/linux/centos/gpg"
+
+    - name: Install packages
+      ansible.builtin.yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - git
+          - python-docker-py
+        state: latest
+        update_cache: true
+
+    - name: Install docker-compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/v2.5.1/docker-compose-linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: 'u+x,g+x'
+
+    - name: Start Docker
+      ansible.builtin.service:
+        name: "docker"
+        enabled: true
+        state: started
+
+    - name: Install portainer
+      ansible.builtin.git:
+        repo: https://www.github.com/wlcg-soc-wg/pocketsoc-ng-portainer/
+        dest: /opt/pocketsoc-ng-portainer
+
+    - name: docker-compose up
+      command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml up -d"
+
+    - name: build portainer admin password
+      tags:
+        - stacks
+        - env
+      shell: "{{ admin_password_command }}"
+      register: adminpassword
+
+    - name: check admin password
+      tags: stacks
+      ansible.builtin.debug:
+        msg: "{{ adminpassword.stdout }}"
+
+    - name: set portainer admin password
+      ignore_errors: yes
+      uri:
+        url: http://localhost/api/users/admin/init
+        method: POST
+        body: "{ \"Username\": \"admin\", \"Password\": \"{{ adminpassword.stdout }}\" }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+
+    - name: get portainer admin authkey
+      tags:
+        - stacks
+        - env
+      uri:
+        url: http://localhost/api/auth
+        method: POST
+        body: "{ \"username\": \"admin\", \"password\": \"{{ adminpassword.stdout }}\" }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+      register: auth
+
+    - name: write authkey
+      ansible.builtin.debug:
+        msg: "{{ auth.json.jwt }}"
+
+    - name: get environment
+      tags: env
+      uri:
+        url: http://localhost/api/endpoints
+        method: GET
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          Authorization: "{{ auth.json.jwt  }}"
+      register: environments
+
+    - name: Define Endpoints
+      when: environments.json | length == 0
+      shell: |
+        curl --silent --show-error -o - localhost/api/endpoints \
+          -H "Authorization: Bearer {{ auth.json.jwt }}" \
+          -F "Name=local" \
+          -F "URL=unix:///var/run/docker.sock" \
+          -F "EndpointCreationType=1"
+      args:
+        warn: false
+      register: response
+
+    - name: get environment
+      tags: stacks
+      uri:
+        url: http://localhost/api/endpoints
+        method: GET
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          Authorization: "{{ auth.json.jwt  }}"
+      register: environments
+
+    - name: check environments
+      ansible.builtin.debug:
+        msg: "{{ environments.json[0].Id }}"
+
+    - name: set portainer stacks
+      ignore_errors: yes
+      tags: stacks
+      uri:
+        url: "http://localhost/api/stacks?type=2&method=repository&endpointId={{ environments.json[0].Id }}"
+        method: POST
+        timeout: 600
+        body: " { \"Name\": \"pocketsoc-ng\", \"RepositoryURL\": \"https://www.github.com/drmcrooks/pocketsoc-ng\", \"RepositoryReferenceName\": \"refs/heads/main\", \"composeFile\": \"docker-compose.yml\", \"env\": [{\"name\": \"HOST_HOSTNAME\", \"value\": \"{{ ansible_fqdn}}\"},{\"name\": \"ADMIN_PASSWORD\", \"value\": \"{{ adminpassword.stdout }}\"}], \"auto-update\": { \"interval\": \"5m\"} }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          Authorization: "{{ auth.json.jwt  }}"
