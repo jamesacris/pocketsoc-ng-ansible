@@ -169,7 +169,7 @@
     - name: Wait for opensearch to come up
       ansible.builtin.wait_for:
         host: 127.0.0.1
-        port: 5601
+        port: 9200
         
     - name: configure opensearch
       community.docker.docker_container_exec:
