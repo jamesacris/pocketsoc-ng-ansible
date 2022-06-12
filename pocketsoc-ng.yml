@@ -215,5 +215,5 @@
       tags: docker
       community.docker.docker_container_exec:
         container: opensearch-dashboards
-        command: /bin/bash -c "export ELASTIC_PASSWORD="{{ adminpassword.stdout }}" && /usr/bin/sed -i \"s#REPLACETHISTEXT#NEWTEXT#g\" /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
+        command: /bin/bash -c "/usr/bin/sed -i \"s#REPLACETHISTEXT#"{{ adminpassword.stdout }}"#g\" /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
         chdir: /root
