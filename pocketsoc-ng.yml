@@ -169,16 +169,44 @@
     - name: Wait for opensearch to come up
       ansible.builtin.wait_for:
         host: 127.0.0.1
-        port: 9200
-        
-    - name: configure opensearch
-      community.docker.docker_container_exec:
-        container:
-          - opensearch-node1
-        command: /bin/bash -c "export ELASTIC_PASSWORD="{{ adminpassword.stdout }}" && /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh -cd /usr/share/opensearch/config/opensearch-security/ -rev -cacert /usr/share/opensearch/config/root-ca.pem -cert /usr/share/opensearch/config/kirk.pem -key /usr/share/opensearch/config/kirk-key.pem"
+        port: 5601
 
-    - name: configure opensearch-dashboards
+    - name: Wait for opensearch to come up
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 9200
+
+    - name: check containers
+      tags: docker
+      community.docker.docker_host_info:
+        containers: yes
+      register: result
+
+#    - name: readout container
+#      tags: docker
+#      ansible.builtin.debug:
+#        msg: "{{ result }}"
+
+    - name: Get infos on container
+      tags: docker
+      community.docker.docker_container_info:
+        name: /opensearch-node1
+      register: result
+
+    - name: Does container exist?
+      tags: docker
+      ansible.builtin.debug:
+        msg: "The container {{ 'exists' if result.exists else 'does not exist' }}"
+
+    - name: Print information about container
+      tags: docker
+      ansible.builtin.debug:
+        var: result.container
+      when: result.exists
+
+    - name: configure opensearch
+      tags: docker
       community.docker.docker_container_exec:
-        container:
-          - opensearch-dashboards
-        command: /bin/bash -c "export ELASTIC_PASSWORD="{{ adminpassword.stdout }}" && /usr/bin/sed -i \"s/REPLACETHISTEXT/\${ELASTIC_PASSWORD}/g\" /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
+        container: opensearch-node1
+        command: /bin/bash -c "export ELASTIC_PASSWORD="{{ adminpassword.stdout }}" && /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh -cd /usr/share/opensearch/config/opensearch-security/ -rev -cacert /usr/share/opensearch/config/root-ca.pem -cert /usr/share/opensearch/config/kirk.pem -key /usr/share/opensearch/config/kirk-key.pem"
+        chdir: /root
