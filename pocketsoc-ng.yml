@@ -204,3 +204,9 @@
         container: opensearch-dashboards
         command: /bin/bash -c "/usr/bin/sed -i \"s#REPLACETHISTEXT#"{{ adminpassword.stdout }}"#g\" /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
         chdir: /root
+
+    - name: Restart opensearch-dashboards
+      community.docker.docker_container:
+        name: opensearch-dashboards
+        state: started
+        restart: yes
