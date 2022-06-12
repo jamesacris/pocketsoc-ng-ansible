@@ -210,3 +210,10 @@
         container: opensearch-node1
         command: /bin/bash -c "export ELASTIC_PASSWORD="{{ adminpassword.stdout }}" && /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh -cd /usr/share/opensearch/config/opensearch-security/ -rev -cacert /usr/share/opensearch/config/root-ca.pem -cert /usr/share/opensearch/config/kirk.pem -key /usr/share/opensearch/config/kirk-key.pem"
         chdir: /root
+
+    - name: configure opensearch-dashboards
+      tags: docker
+      community.docker.docker_container_exec:
+        container: opensearch-dashboards
+        command: /bin/bash -c "export ELASTIC_PASSWORD="{{ adminpassword.stdout }}" && /usr/bin/sed -i \"s#REPLACETHISTEXT#NEWTEXT#g\" /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
+        chdir: /root
