@@ -78,13 +78,11 @@
 
     - name: build portainer admin password
       tags:
-        - stacks
-        - env
+        - test
       shell: "{{ admin_password_command }}"
       register: adminpassword
 
     - name: check admin password
-      tags: stacks
       ansible.builtin.debug:
         msg: "{{ adminpassword.stdout }}"
 
@@ -99,9 +97,6 @@
           Content-Type: "application/json"
 
     - name: get portainer admin authkey
-      tags:
-        - stacks
-        - env
       uri:
         url: http://localhost/api/auth
         method: POST
@@ -116,7 +111,6 @@
         msg: "{{ auth.json.jwt }}"
 
     - name: get environment
-      tags: env
       uri:
         url: http://localhost/api/endpoints
         method: GET
@@ -139,7 +133,6 @@
       register: response
 
     - name: get environment
-      tags: stacks
       uri:
         url: http://localhost/api/endpoints
         method: GET
@@ -155,7 +148,6 @@
 
     - name: set portainer stacks
       ignore_errors: yes
-      tags: stacks
       uri:
         url: "http://localhost/api/stacks?type=2&method=repository&endpointId={{ environments.json[0].Id }}"
         method: POST
@@ -177,7 +169,6 @@
         port: 9200
 
     - name: check containers
-      tags: docker
       community.docker.docker_host_info:
         containers: yes
       register: result
@@ -188,31 +179,27 @@
 #        msg: "{{ result }}"
 
     - name: Get infos on container
-      tags: docker
       community.docker.docker_container_info:
         name: /opensearch-node1
       register: result
 
     - name: Does container exist?
-      tags: docker
       ansible.builtin.debug:
         msg: "The container {{ 'exists' if result.exists else 'does not exist' }}"
 
     - name: Print information about container
-      tags: docker
       ansible.builtin.debug:
         var: result.container
       when: result.exists
 
     - name: configure opensearch
-      tags: docker
       community.docker.docker_container_exec:
         container: opensearch-node1
         command: /bin/bash -c "export ELASTIC_PASSWORD="{{ adminpassword.stdout }}" && /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh -cd /usr/share/opensearch/config/opensearch-security/ -rev -cacert /usr/share/opensearch/config/root-ca.pem -cert /usr/share/opensearch/config/kirk.pem -key /usr/share/opensearch/config/kirk-key.pem"
         chdir: /root
 
     - name: configure opensearch-dashboards
-      tags: docker
+      tags: test
       community.docker.docker_container_exec:
         container: opensearch-dashboards
         command: /bin/bash -c "/usr/bin/sed -i \"s#REPLACETHISTEXT#"{{ adminpassword.stdout }}"#g\" /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
