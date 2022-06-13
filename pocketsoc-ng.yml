@@ -33,7 +33,7 @@
         
     - name: Generate an OpenSSL private key with the default values (4096 bits, RSA)
       community.crypto.openssl_privatekey:
-        path: /etc/ssl/certs/soc_training.key
+        path: /etc/ssl/certs/soc/soc_training.key
         
     - name: Create certificate signing request (CSR) for self-signed certificate
       community.crypto.openssl_csr_pipe:
@@ -46,7 +46,7 @@
       community.crypto.x509_certificate:
         path: /etc/ssl/certs/soc_training.crt
         csr_content: "{{ csr.csr }}"
-        privatekey_path: /etc/ssl/certs/soc_training.key
+        privatekey_path: /etc/ssl/certs/soc/soc_training.key
         provider: selfsigned
 
     - name: Add docker signing key
