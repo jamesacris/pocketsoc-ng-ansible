@@ -30,6 +30,20 @@
         state: present
         sysctl_set: true
         reload: true
+        
+    - name: Create certificate signing request (CSR) for self-signed certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: /etc/ssl/certs/soc_training.key
+        common_name: "{{ ansible_fqdn }}"
+        organization_name: sCSC
+      register: csr
+
+    - name: Create self-signed certificate from CSR
+      community.crypto.x509_certificate:
+        path: /etc/ssl/certs/soc_training.crt
+        csr_content: "{{ csr.csr }}"
+        privatekey_path: /etc/ssl/certs/soc_training.key
+        provider: selfsigned
 
     - name: Add docker signing key
       ansible.builtin.rpm_key:
