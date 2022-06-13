@@ -31,6 +31,11 @@
         sysctl_set: true
         reload: true
         
+    - name: Create soc certs directory
+      ansible.builtin.file:
+        path: /etc/ssl/certs/soc
+        state: directory
+
     - name: Generate an OpenSSL private key with the default values (4096 bits, RSA)
       community.crypto.openssl_privatekey:
         path: /etc/ssl/certs/soc/soc_training.key
