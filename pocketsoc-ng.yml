@@ -88,7 +88,7 @@
 
     - name: Install portainer
       ansible.builtin.git:
-        repo: https://www.github.com/wlcg-soc-wg/pocketsoc-ng-portainer/
+        repo: https://www.github.com/drmcrooks/pocketsoc-ng-portainer/
         dest: /opt/pocketsoc-ng-portainer
 
     - name: docker-compose up
