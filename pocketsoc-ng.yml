@@ -31,6 +31,10 @@
         sysctl_set: true
         reload: true
         
+    - name: Generate an OpenSSL private key with the default values (4096 bits, RSA)
+        community.crypto.openssl_privatekey:
+        path: /etc/ssl/certs/soc_training.key
+        
     - name: Create certificate signing request (CSR) for self-signed certificate
       community.crypto.openssl_csr_pipe:
         privatekey_path: /etc/ssl/certs/soc_training.key
