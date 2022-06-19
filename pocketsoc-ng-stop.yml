@@ -21,6 +21,7 @@
       register: auth
         
     - name: stop pocketsoc-ng
+      ignore_errors: yes
       uri:
         url: "http://localhost/api/stacks/1/stop"
         method: POST
