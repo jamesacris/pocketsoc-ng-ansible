@@ -1,0 +1,75 @@
+---
+- name: stop pocketsoc-ng
+  hosts: trainingvms
+  become: true
+  vars_files:
+    - pocketsoc-ng_vars.env
+
+  tasks:
+    - name: check connection
+      ansible.builtin.command: /bin/uptime
+        
+    - name: set portainer stacks
+      ignore_errors: yes
+      uri:
+        url: "http://localhost/api/stacks?type=2&method=repository&endpointId={{ environments.json[0].Id }}"
+        method: POST
+        timeout: 600
+        body: " { \"Name\": \"pocketsoc-ng\", \"RepositoryURL\": \"https://www.github.com/drmcrooks/pocketsoc-ng\", \"RepositoryReferenceName\": \"refs/heads/main\", \"composeFile\": \"docker-compose.yml\", \"env\": [{\"name\": \"HOST_HOSTNAME\", \"value\": \"{{ ansible_fqdn}}\"},{\"name\": \"ADMIN_PASSWORD\", \"value\": \"{{ adminpassword.stdout }}\"}], \"auto-update\": { \"interval\": \"5m\"} }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          Authorization: "{{ auth.json.jwt  }}"
+          
+    - name: Wait for opensearch to come up
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 5601
+
+    - name: Wait for opensearch to come up
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 9200
+
+    - name: check containers
+      community.docker.docker_host_info:
+        containers: yes
+      register: result
+
+#    - name: readout container
+#      tags: docker
+#      ansible.builtin.debug:
+#        msg: "{{ result }}"
+
+    - name: Get infos on container
+      community.docker.docker_container_info:
+        name: /opensearch-node1
+      register: result
+
+    - name: Does container exist?
+      ansible.builtin.debug:
+        msg: "The container {{ 'exists' if result.exists else 'does not exist' }}"
+
+    - name: Print information about container
+      ansible.builtin.debug:
+        var: result.container
+      when: result.exists
+
+    - name: configure opensearch
+      community.docker.docker_container_exec:
+        container: opensearch-node1
+        command: /bin/bash -c "export ELASTIC_PASSWORD="{{ adminpassword.stdout }}" && /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh -cd /usr/share/opensearch/config/opensearch-security/ -rev -cacert /usr/share/opensearch/config/root-ca.pem -cert /usr/share/opensearch/config/kirk.pem -key /usr/share/opensearch/config/kirk-key.pem"
+        chdir: /root
+
+    - name: configure opensearch-dashboards
+      tags: test
+      community.docker.docker_container_exec:
+        container: opensearch-dashboards
+        command: /bin/bash -c "/usr/bin/sed -i \"s#REPLACETHISTEXT#"{{ adminpassword.stdout }}"#g\" /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
+        chdir: /root
+
+    - name: Restart opensearch-dashboards
+      community.docker.docker_container:
+        name: opensearch-dashboards
+        state: started
+        restart: yes
