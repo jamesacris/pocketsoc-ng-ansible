@@ -28,8 +28,6 @@
         headers:
           Content-Type: "application/json"
           Authorization: "{{ auth.json.jwt  }}"
-      register: stacks
 
-    - name: write stacks
-      ansible.builtin.debug:
-        msg: "{{ stacks }}"
+    - name: portainer docker-compose down
+      command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml down"
