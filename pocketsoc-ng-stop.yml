@@ -6,9 +6,23 @@
     - pocketsoc-ng_vars.env
 
   tasks:
-    - name: check connection
-      ansible.builtin.command: /bin/uptime
-        
+    - name: build portainer admin password
+      shell: "{{ admin_password_command }}"
+      register: adminpassword
+
+    - name: check admin password
+      ansible.builtin.debug:
+        msg: "{{ adminpassword.stdout }}"
+
+    - name: get portainer admin authkey
+      uri:
+        url: http://localhost/api/auth
+        method: POST
+        body: "{ \"username\": \"admin\", \"password\": \"{{ adminpassword.stdout }}\" }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+      register: auth
         
     - name: get stacks
       uri:
