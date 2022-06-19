@@ -33,3 +33,7 @@
           Content-Type: "application/json"
           Authorization: "{{ auth.json.jwt  }}"
       register: output
+
+    - name: list stacks
+      ansible.builtin.debug:
+        msg: "{{ output.stdout }}"
