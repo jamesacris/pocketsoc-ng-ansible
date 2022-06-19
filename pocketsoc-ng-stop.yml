@@ -10,10 +10,6 @@
       shell: "{{ admin_password_command }}"
       register: adminpassword
 
-    - name: check admin password
-      ansible.builtin.debug:
-        msg: "{{ adminpassword.stdout }}"
-
     - name: get portainer admin authkey
       uri:
         url: http://localhost/api/auth
@@ -32,8 +28,8 @@
         headers:
           Content-Type: "application/json"
           Authorization: "{{ auth.json.jwt  }}"
-      register: output
+      register: stacks
 
-    - name: list stacks
+    - name: write stacks
       ansible.builtin.debug:
-        msg: "{{ output.stdout }}"
+        msg: "{{ stacks }}"
