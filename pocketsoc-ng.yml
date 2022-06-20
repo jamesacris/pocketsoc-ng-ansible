@@ -56,12 +56,20 @@
         enabled: true
         state: started
 
+    - name: Install certificates
+      ansible.builtin.git:
+        repo: https://www.github.com/drmcrooks/pocketsoc-ng-portainer/
+        dest: /opt/pocketsoc-ng-certificates
+        
+    - name: docker-compose up certificates 
+      command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-certificates/docker-compose.yml up"
+
     - name: Install portainer
       ansible.builtin.git:
         repo: https://www.github.com/drmcrooks/pocketsoc-ng-portainer/
         dest: /opt/pocketsoc-ng-portainer
 
-    - name: docker-compose up
+    - name: docker-compose up portainer 
       command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml up -d"
 
     - name: build portainer admin password
