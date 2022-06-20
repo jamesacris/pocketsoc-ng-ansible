@@ -15,7 +15,7 @@
 
     - name: get portainer admin authkey
       uri:
-        url: http://localhost/api/auth
+        url: http://localhost:8081/api/auth
         method: POST
         body: "{ \"username\": \"admin\", \"password\": \"{{ adminpassword.stdout }}\" }"
         body_format: json
@@ -26,7 +26,7 @@
     - name: start pocketsoc-ng
       ignore_errors: yes
       uri:
-        url: "http://localhost/api/stacks/1/start"
+        url: "http://localhost:8081/api/stacks/1/start"
         method: POST
         body_format: json
         headers:
