@@ -14,7 +14,7 @@
     - name: docker-compose up certificates 
       command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-certificates/docker-compose.yml up"
 
-  - name: Update portainer
+    - name: Update portainer
       ansible.builtin.git:
         repo: https://www.github.com/drmcrooks/pocketsoc-ng-portainer/
         dest: /opt/pocketsoc-ng-portainer
