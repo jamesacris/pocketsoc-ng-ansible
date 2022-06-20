@@ -65,7 +65,7 @@
       command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-certificates/docker-compose.yml up"
 
     - name: Install portainer
-      shell: docker volume create portainer_data && docker container stop portainer && docker container rm portainer && docker run -p 8000:8000 -p 9443:9443 -p 8081:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v pocketsoc-ng-portainer_portainer_data:/data -v certificates:/certs portainer/portainer-ce:latest  --sslcert /certs/host-certs/live/{{ ansible_fqdn }}/cert.pem --sslkey /certs/host-certs/live/{{ ansible_fqdn }}/privkey.pem
+      shell: docker volume create portainer_data && docker run -p 8000:8000 -p 9443:9443 -p 8081:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -v certificates:/certs portainer/portainer-ce:latest  --sslcert /certs/host-certs/live/{{ ansible_fqdn }}/cert.pem --sslkey /certs/host-certs/live/{{ ansible_fqdn }}/privkey.pem
 
     - name: build portainer admin password
       tags:
