@@ -3,9 +3,7 @@
 scschosts=`cat hosts | grep scsc`
 
 for scschost in $scschosts; do
-    echo $scschost:
-   
-    echo -n MISP:
+    echo -n $scschost: MISP:
     echo yes | openssl s_client -host $scschost -port 443 1> /dev/null 2> /dev/null ; echo $?
 
     echo -n OpenSearch:
