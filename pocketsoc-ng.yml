@@ -94,7 +94,7 @@
     - name: set portainer admin password
       ignore_errors: yes
       uri:
-        url: http://localhost/api/users/admin/init
+        url: http://localhost:8081/api/users/admin/init
         method: POST
         body: "{ \"Username\": \"admin\", \"Password\": \"{{ adminpassword.stdout }}\" }"
         body_format: json
@@ -103,7 +103,7 @@
 
     - name: get portainer admin authkey
       uri:
-        url: http://localhost/api/auth
+        url: http://localhost:8081/api/auth
         method: POST
         body: "{ \"username\": \"admin\", \"password\": \"{{ adminpassword.stdout }}\" }"
         body_format: json
@@ -117,7 +117,7 @@
 
     - name: get environment
       uri:
-        url: http://localhost/api/endpoints
+        url: http://localhost:8081/api/endpoints
         method: GET
         body_format: json
         headers:
@@ -128,7 +128,7 @@
     - name: Define Endpoints
       when: environments.json | length == 0
       shell: |
-        curl --silent --show-error -o - localhost/api/endpoints \
+        curl --silent --show-error -o - localhost:8081/api/endpoints \
           -H "Authorization: Bearer {{ auth.json.jwt }}" \
           -F "Name=local" \
           -F "URL=unix:///var/run/docker.sock" \
@@ -139,7 +139,7 @@
 
     - name: get environment
       uri:
-        url: http://localhost/api/endpoints
+        url: http://localhost:8081/api/endpoints
         method: GET
         body_format: json
         headers:
@@ -154,7 +154,7 @@
     - name: set portainer stacks
       ignore_errors: yes
       uri:
-        url: "http://localhost/api/stacks?type=2&method=repository&endpointId={{ environments.json[0].Id }}"
+        url: "http://localhost:8081/api/stacks?type=2&method=repository&endpointId={{ environments.json[0].Id }}"
         method: POST
         timeout: 600
         body: " { \"Name\": \"pocketsoc-ng\", \"RepositoryURL\": \"https://www.github.com/drmcrooks/pocketsoc-ng\", \"RepositoryReferenceName\": \"refs/heads/main\", \"composeFile\": \"docker-compose.yml\", \"env\": [{\"name\": \"HOST_HOSTNAME\", \"value\": \"{{ ansible_fqdn}}\"},{\"name\": \"ADMIN_PASSWORD\", \"value\": \"{{ adminpassword.stdout }}\"}], \"auto-update\": { \"interval\": \"5m\"} }"
