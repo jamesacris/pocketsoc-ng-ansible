@@ -13,7 +13,15 @@
 
     - name: portainer docker-compose up
       command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml up -d"
-      
+
+    - name: Install certificates
+      ansible.builtin.git:
+        repo: https://www.github.com/drmcrooks/pocketsoc-ng-certificates/
+        dest: /opt/pocketsoc-ng-certificates
+        
+    - name: docker-compose up certificates 
+      command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-certificates/docker-compose.yml up"
+
     - name: build portainer admin password
       shell: "{{ admin_password_command }}"
       register: adminpassword
