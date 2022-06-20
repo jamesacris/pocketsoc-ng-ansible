@@ -28,6 +28,7 @@
       uri:
         url: "http://localhost:8081/api/stacks/1/start"
         method: POST
+        timeout: 600
         body_format: json
         headers:
           Content-Type: "application/json"
