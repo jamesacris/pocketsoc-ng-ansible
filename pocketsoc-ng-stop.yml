@@ -35,6 +35,6 @@
       ignore_errors: yes
       shell: /bin/bash -c "docker image rm \$(docker image ls | grep pocketsoc-ng | awk '{print \$3}')"
 
-    - name: portainer docker-compose up
-      command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml up -d"
+    - name: portainer docker-compose stop
+      command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml stop"
 
