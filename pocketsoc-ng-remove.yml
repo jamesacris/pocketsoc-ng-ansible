@@ -1,0 +1,34 @@
+---
+- name: stop pocketsoc-ng
+  hosts: trainingvms
+  become: true
+  vars_files:
+    - pocketsoc-ng_vars.env
+
+  tasks:
+    - name: portainer docker-compose up
+      command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml up -d"
+      
+    - name: build portainer admin password
+      shell: "{{ admin_password_command }}"
+      register: adminpassword
+
+    - name: get portainer admin authkey
+      uri:
+        url: http://localhost/api/auth
+        method: POST
+        body: "{ \"username\": \"admin\", \"password\": \"{{ adminpassword.stdout }}\" }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+      register: auth
+        
+    - name: start pocketsoc-ng
+      ignore_errors: yes
+      uri:
+        url: "http://localhost/api/stacks/1"
+        method: DELETE
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          Authorization: "{{ auth.json.jwt  }}"
