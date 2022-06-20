@@ -10,7 +10,7 @@
       shell: docker run --rm --name transfer -v "/etc/letsencrypt:/host-certs" -v "certificates:/container-certs" quay.io/centos/centos:stream8 cp -r /host-certs /container-certs
 
     - name: portainer docker run
-      shell: docker container stop portainer && docker container rm portainer && docker run -p 8000:8000 -p 9443:9443 -p 8081:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v pocketsoc-ng-portainer_portainer_data:/data -v certificates:/certs portainer/portainer-ce:latest --sslcert /certs/host-certs/live/{{ ansible_fqdn }}/cert.pem --sslkey /certs/host-certs/live/{{ ansible_fqdn }}/priv.pem
+      shell: docker container stop portainer && docker container rm portainer && docker run -p 8000:8000 -p 9443:9443 -p 8081:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v pocketsoc-ng-portainer_portainer_data:/data -v certificates:/certs portainer/portainer-ce:latest --sslcert /certs/host-certs/live/{{ ansible_fqdn }}/cert.pem --sslkey /certs/host-certs/live/{{ ansible_fqdn }}/privkey.pem
 
     - name: build portainer admin password
       shell: "{{ admin_password_command }}"
