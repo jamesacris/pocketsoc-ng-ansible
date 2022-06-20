@@ -23,12 +23,6 @@
           Content-Type: "application/json"
       register: auth
         
-    - name: start pocketsoc-ng
+    - name: remove pocketsoc-ng images
       ignore_errors: yes
-      uri:
-        url: "http://localhost/api/stacks/1"
-        method: DELETE
-        body_format: json
-        headers:
-          Content-Type: "application/json"
-          Authorization: "{{ auth.json.jwt  }}"
+      shell: /bin/bash -c ""
