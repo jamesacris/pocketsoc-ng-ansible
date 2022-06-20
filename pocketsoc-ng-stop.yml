@@ -5,10 +5,7 @@
   vars_files:
     - pocketsoc-ng_vars.env
 
-  tasks:
-    - name: portainer docker-compose up
-      command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml up -d"
-      
+  tasks:      
     - name: build portainer admin password
       shell: "{{ admin_password_command }}"
       register: adminpassword
@@ -32,4 +29,11 @@
         headers:
           Content-Type: "application/json"
           Authorization: "{{ auth.json.jwt  }}"
+          
+    - name: remove pocketsoc-ng images
+      ignore_errors: yes
+      shell: /bin/bash -c "docker image rm \$(docker image ls | grep pocketsoc-ng | awk '{print \$3}')"
+
+    - name: portainer docker-compose up
+      command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml up -d"
 
