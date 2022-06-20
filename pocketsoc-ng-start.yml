@@ -31,7 +31,19 @@
         headers:
           Content-Type: "application/json"
       register: auth
-        
+      
+    - name: set portainer stacks
+      ignore_errors: yes
+      uri:
+        url: "http://localhost:8081/api/stacks/1/git/redploy"
+        method: POST
+        timeout: 600
+        body: " { \"RepositoryReferenceName\": \"refs/heads/main\", \"env\": [{\"name\": \"HOST_HOSTNAME\", \"value\": \"{{ ansible_fqdn}}\"},{\"name\": \"ADMIN_PASSWORD\", \"value\": \"{{ adminpassword.stdout }}\"}] }"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+          Authorization: "{{ auth.json.jwt  }}"
+
     - name: start pocketsoc-ng
       ignore_errors: yes
       uri:
