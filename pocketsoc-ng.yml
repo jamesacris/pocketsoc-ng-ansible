@@ -58,7 +58,7 @@
 
     - name: Install certificates
       ansible.builtin.git:
-        repo: https://www.github.com/drmcrooks/pocketsoc-ng-portainer/
+        repo: https://www.github.com/drmcrooks/pocketsoc-ng-certificates/
         dest: /opt/pocketsoc-ng-certificates
         
     - name: docker-compose up certificates 
