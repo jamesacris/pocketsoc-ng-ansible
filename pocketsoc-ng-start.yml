@@ -6,6 +6,11 @@
     - pocketsoc-ng_vars.env
 
   tasks:
+    - name: Update portainer
+      ansible.builtin.git:
+        repo: https://www.github.com/drmcrooks/pocketsoc-ng-portainer/
+        dest: /opt/pocketsoc-ng-portainer
+
     - name: portainer docker-compose up
       command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-portainer/docker-compose.yml up -d"
       
