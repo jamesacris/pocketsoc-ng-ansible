@@ -1,16 +1,4 @@
 ---
-- name: local updates
-  hosts: 127.0.0.1
-  become: true
-
-  tasks:
-    - name: local yum update
-      ansible.builtin.yum:
-        name: "*"
-        state: latest
-      tags:
-        - localonly
-
 - name: install pocketsoc-ng
   hosts: trainingvms
   become: true
@@ -18,11 +6,6 @@
     - pocketsoc-ng_vars.env
 
   tasks:
-    - name: yum update
-      ansible.builtin.yum:
-        name: "*"
-        state: latest
-
     - name: set sysctl
       ansible.posix.sysctl:
         name: vm.max_map_count
