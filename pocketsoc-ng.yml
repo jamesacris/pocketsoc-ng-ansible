@@ -33,16 +33,16 @@
         gpgcheck: true
         gpgkey: "https://download.docker.com/linux/centos/gpg"
 
-    - name: Install packages
-      ansible.builtin.yum:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - git
-          - python-docker-py
-        state: latest
-        update_cache: true
+    #- name: Install packages
+    #  ansible.builtin.yum:
+    #    name:
+    #      - docker-ce
+    #      - docker-ce-cli
+    #      - containerd.io
+    #      - git
+    #      - python-docker-py
+    #    state: latest
+    #    update_cache: true
 
     - name: Install docker-compose
       get_url:
