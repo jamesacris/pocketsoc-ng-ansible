@@ -1,5 +1,5 @@
 ---
-- name: start pocketsoc-ng
+- name: stop pocketsoc-ng
   hosts: trainingvms
   become: true
   vars_files:
@@ -23,10 +23,10 @@
           Content-Type: "application/json"
       register: auth
         
-    - name: start pocketsoc-ng
+    - name: stop pocketsoc-ng
       ignore_errors: yes
       uri:
-        url: "http://localhost:8081/api/stacks/1/start"
+        url: "http://localhost:8081/api/stacks/1/stop"
         method: POST
         body_format: json
         headers:
