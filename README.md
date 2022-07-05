@@ -8,8 +8,7 @@ Host needs
 - git
 - ansible collecttions:
 ```
-ansible-galaxy collection install ansible.posix
-ansible-galaxy collection install community.docker
+ansible-galaxy collection install ansible.posix community.docker
 ```
 
 ## Variables
