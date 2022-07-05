@@ -6,6 +6,10 @@ Host needs
 
 - ansible
 - git
+- ansible collecttions:
+```
+ansible-galaxy collection install ansible.posix
+```
 
 ## Variables
 
