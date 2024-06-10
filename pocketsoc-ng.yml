@@ -13,7 +13,7 @@
         state: present
         sysctl_set: true
         reload: true
-        
+
     - name: Create soc certs directory
       ansible.builtin.file:
         path: /etc/ssl/certs/soc
@@ -33,16 +33,16 @@
         gpgcheck: true
         gpgkey: "https://download.docker.com/linux/centos/gpg"
 
-    #- name: Install packages
-    #  ansible.builtin.yum:
-    #    name:
-    #      - docker-ce
-    #      - docker-ce-cli
-    #      - containerd.io
-    #      - git
-    #      - python-docker-py
-    #    state: latest
-    #    update_cache: true
+    - name: Install packages
+      ansible.builtin.yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - git
+            #- python-docker-py
+        state: latest
+        update_cache: true
 
     - name: Install docker-compose
       get_url:
@@ -58,15 +58,15 @@
 
     - name: Install certificates
       ansible.builtin.git:
-        repo: https://www.github.com/drmcrooks/pocketsoc-ng-certificates/
+        repo: https://www.github.com/jamesacris/pocketsoc-ng-certificates/
         dest: /opt/pocketsoc-ng-certificates
-        
-    - name: docker-compose up certificates 
+
+    - name: docker-compose up certificates
       command: "/usr/local/bin/docker-compose -f /opt/pocketsoc-ng-certificates/docker-compose.yml up"
 
     - name: Install portainer
       ignore_errors: yes
-      shell: docker volume create portainer_data && docker run -d -p 8000:8000 -p 9443:9443 -p 8081:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -v certificates:/certs portainer/portainer-ce:2.20.3  --sslcert /certs/host-certs/live/{{ ansible_fqdn }}/cert.pem --sslkey /certs/host-certs/live/{{ ansible_fqdn }}/privkey.pem
+      shell: docker volume create portainer_data && docker run -d -p 8000:8000 -p 9443:9443 -p 8081:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -v certificates:/certs portainer/portainer-ce:2.20.3 #--sslcert /certs/host-certs/live/{{ ansible_fqdn }}/cert.pem --sslkey /certs/host-certs/live/{{ ansible_fqdn }}/privkey.pem
 
     - name: build portainer admin password
       tags:
@@ -79,7 +79,7 @@
         msg: "{{ adminpassword.stdout }}"
 
     - name: set portainer admin password
-      ignore_errors: yes
+      # ignore_errors: yes
       uri:
         url: http://localhost:8081/api/users/admin/init
         method: POST
@@ -89,6 +89,7 @@
           Content-Type: "application/json"
 
     - name: get portainer admin authkey
+      # ignore_errors: yes
       uri:
         url: http://localhost:8081/api/auth
         method: POST
@@ -121,7 +122,7 @@
           -F "URL=unix:///var/run/docker.sock" \
           -F "EndpointCreationType=1"
       args:
-        warn: false
+        # warn: false
       register: response
 
     - name: get environment
@@ -144,12 +145,12 @@
         url: "http://localhost:8081/api/stacks?type=2&method=repository&endpointId={{ environments.json[0].Id }}"
         method: POST
         timeout: 600
-        body: " { \"Name\": \"pocketsoc-ng\", \"RepositoryURL\": \"https://www.github.com/drmcrooks/pocketsoc-ng\", \"RepositoryReferenceName\": \"refs/heads/main\", \"composeFile\": \"docker-compose.yml\", \"env\": [{\"name\": \"HOST_HOSTNAME\", \"value\": \"{{ ansible_fqdn}}\"},{\"name\": \"ADMIN_PASSWORD\", \"value\": \"{{ adminpassword.stdout }}\"}], \"auto-update\": { \"interval\": \"5m\"} }"
+        body: " { \"Name\": \"pocketsoc-ng\", \"RepositoryURL\": \"https://github.com/jamesacris/pocketsoc-ng.git\", \"RepositoryReferenceName\": \"refs/heads/main\", \"composeFile\": \"docker-compose.yml\", \"env\": [{\"name\": \"HOST_HOSTNAME\", \"value\": \"{{ ansible_fqdn}}\"},{\"name\": \"ADMIN_PASSWORD\", \"value\": \"{{ adminpassword.stdout }}\"}], \"auto-update\": { \"interval\": \"5m\"} }"
         body_format: json
         headers:
           Content-Type: "application/json"
           Authorization: "{{ auth.json.jwt  }}"
-          
+
     - name: Wait for opensearch to come up
       ansible.builtin.wait_for:
         host: 127.0.0.1
@@ -184,10 +185,17 @@
         var: result.container
       when: result.exists
 
-    - name: configure opensearch
+    # - name: configure opensearch
+    - name: set opensearch admin password
       community.docker.docker_container_exec:
         container: opensearch-node1
-        command: /bin/bash -c "export ELASTIC_PASSWORD="{{ adminpassword.stdout }}" && /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh -cd /usr/share/opensearch/config/opensearch-security/ -rev -cacert /usr/share/opensearch/config/root-ca.pem -cert /usr/share/opensearch/config/kirk.pem -key /usr/share/opensearch/config/kirk-key.pem"
+        command: /bin/bash -c "export OPENSEARCH_INITIAL_ADMIN_PASSWORD="{{ adminpassword.stdout }}"" # && "/usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh" -cd "/usr/share/opensearch/config/opensearch-security" -icl -key "/usr/share/opensearch/config/kirk-key.pem" -cert "/usr/share/opensearch/config/kirk.pem" -cacert "/usr/share/opensearch/config/root-ca.pem" -nhnv
+        chdir: /root
+
+    - name: run securityadmin.sh
+      community.docker.docker_container_exec:
+        container: opensearch-node1
+        command: /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh -h "{{ ansible_ssh_host }}" -cd /usr/share/opensearch/config/opensearch-security -icl -key /usr/share/opensearch/config/kirk-key.pem -cert /usr/share/opensearch/config/kirk.pem -cacert /usr/share/opensearch/config/root-ca.pem -nhnv
         chdir: /root
 
     - name: configure opensearch-dashboards
