@@ -2,3 +2,4 @@ hosts
 pocketsoc-ng_vars.env
 facts.json
 facts.yml
+inventory.ini
